@@ -13,6 +13,36 @@ function wpjd_add_export_page() {
     );
 }
 
+// 🔁 Move export logic here to run before rendering
+add_action('admin_init', 'wpjd_handle_export_download');
+function wpjd_handle_export_download() {
+    if (
+        is_admin() &&
+        isset($_POST['wpjd_export_jobs']) &&
+        current_user_can('manage_options')
+    ) {
+        require_once WPJD_PLUGIN_DIR . 'includes/fetch-jobs.php';
+        require_once WPJD_PLUGIN_DIR . 'includes/generate-file.php';
+
+        $keyword  = get_option('wpjd_job_keyword');
+        $location = get_option('wpjd_job_location');
+        $count    = intval(get_option('wpjd_job_count', 10));
+
+        $jobs = wpjd_fetch_jobs_now($keyword, $location, $count, false);
+
+        // prevent output before download
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+        if (ob_get_length()) {
+            ob_clean();
+        }
+
+        wpjd_generate_and_download_file($jobs);
+        exit;
+    }
+}
+
 function wpjd_render_export_page() {
     ?>
     <div class="wrap">
@@ -23,27 +53,4 @@ function wpjd_render_export_page() {
         </form>
     </div>
     <?php
-
-    if (isset($_POST['wpjd_export_jobs'])) {
-        $keyword  = get_option('wpjd_job_keyword');
-        $location = get_option('wpjd_job_location');
-        $count    = intval(get_option('wpjd_job_count', 10));
-
-        require_once WPJD_PLUGIN_DIR . 'includes/fetch-jobs.php';
-        require_once WPJD_PLUGIN_DIR . 'includes/generate-file.php';
-
-        // Clean any previous output to avoid download corruption
-        while (ob_get_level()) {
-            ob_end_clean();
-        }
-
-        $jobs = wpjd_fetch_jobs_now($keyword, $location, $count, false); // debug = false
-
-        if (!empty($jobs)) {
-            wpjd_generate_and_download_file($jobs);
-            exit;
-        } else {
-            echo '<div class="notice notice-warning"><p>No jobs found based on your filters.</p></div>';
-        }
-    }
 }
