@@ -5,7 +5,7 @@
  * Description: Fetch remote job listings and export them as a .txt file based on selected keyword, location, and count.
  * Version: 1.0.1
  * Author: Talha Shahid
- * Author URI: https://yourportfolio.com
+ * Author URI: https://talha-solutions.site/
  * License: GPL2
  * Text Domain: wp-jobdigest
  */
