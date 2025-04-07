@@ -31,10 +31,14 @@ function wpjd_fetch_jobs_now($keyword, $location = '', $limit = 10, $debug = fal
         if (!isset($job['position']) || !isset($job['company'])) continue;
 
         $score = 0;
-        $title = $job['position'];
-        $company = $job['company'];
-        $job_loc = $job['location'] ?? '';
-        $tags = $job['tags'] ?? [];
+        $title    = $job['position'];
+        $company  = $job['company'];
+        $job_loc  = $job['location'] ?? '';
+        $tags     = $job['tags'] ?? [];
+        $url      = $job['url'] ?? '#';
+        $epoch    = $job['epoch'] ?? time(); // fallback to now if missing
+        $posted   = date('d-F-Y', $epoch); // e.g., 01-April-2025
+
 
         if (!empty($keyword)) {
             if (stripos($title, $keyword) !== false) $score += 2;
@@ -50,8 +54,9 @@ function wpjd_fetch_jobs_now($keyword, $location = '', $limit = 10, $debug = fal
         $scored_jobs[] = [
             'title'     => sanitize_text_field($title),
             'company'   => sanitize_text_field($company),
-            'url'       => esc_url_raw($job['url'] ?? '#'),
+            'url'       => esc_url_raw($url),
             'location'  => sanitize_text_field($job_loc),
+            'posted'    => $posted,
             'score'     => $score,
             'timestamp' => time()
         ];
@@ -63,7 +68,7 @@ function wpjd_fetch_jobs_now($keyword, $location = '', $limit = 10, $debug = fal
     if ($debug && !empty($top_jobs)) {
         echo '<p><strong>Top Matches:</strong></p><ul>';
         foreach ($top_jobs as $j) {
-            echo '<li>' . esc_html($j['title']) . ' — ' . esc_html($j['company']) . ' (' . esc_html($j['location']) . ')</li>';
+            echo '<li>' . esc_html($j['title']) . ' — ' . esc_html($j['company']) . ' (' . esc_html($j['location']) . ') - Posted: ' . esc_html($j['posted']) . '</li>';
         }
         echo '</ul>';
     }
